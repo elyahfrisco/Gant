@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gestion de Planning et Réalisation</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        background-color: #f4f4f4;
+      }
+
+      #gantt-chart {
+        position: relative;
+        width: 100%;
+        max-width: 800px;
+        border: 1px solid #ccc;
+        height: 200px;
+        margin-bottom: 20px;
+        overflow-x: auto;
+      }
+
+      .gantt-task {
+        position: relative;
+        width: 100%;
+        height: 40px;
+        margin-bottom: 10px;
+      }
+
+      .planned-bar,
+      .actual-bar {
+        position: absolute;
+        height: 15px;
+      }
+
+      .planned-bar {
+        background-color: blue;
+        opacity: 0.5;
+        top: 5px;
+      }
+
+      .actual-bar {
+        background-color: green;
+        opacity: 0.8;
+        top: 25px;
+      }
+
+      .task-form {
+        background: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+      }
+
+      .task-form input,
+      .task-form button {
+        width: calc(50% - 10px);
+        padding: 10px;
+        margin: 5px;
+        font-size: 16px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+      }
+
+      .task-form button {
+        background-color: #28a745;
+        color: white;
+        cursor: pointer;
+      }
+
+      .task-form button:hover {
+        background-color: #218838;
+      }
+
+      .form-section {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+      }
+
+      .task-form label {
+        display: block;
+        font-weight: bold;
+        margin-top: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Gestion de Planning et Réalisation</h2>
+    <div id="gantt-chart"></div>
+
+    <!-- Formulaire d'ajout de tâche -->
+    <div class="task-form">
+      <h3>Ajouter une Tâche</h3>
+      <div class="form-section">
+        <div>
+          <label for="task-name">Nom de la tâche :</label>
+          <input type="text" id="task-name" placeholder="Démol. Escalier" />
+        </div>
+        <div>
+          <label for="planned-start">Début Planification :</label>
+          <input type="date" id="planned-start" />
+        </div>
+        <div>
+          <label for="planned-end">Fin Planification :</label>
+          <input type="date" id="planned-end" />
+        </div>
+        <div>
+          <label for="actual-start">Début Réalisation :</label>
+          <input type="date" id="actual-start" />
+        </div>
+        <div>
+          <label for="actual-end">Fin Réalisation :</label>
+          <input type="date" id="actual-end" />
+        </div>
+      </div>
+      <button onclick="addTask()">Ajouter la Tâche</button>
+    </div>
+
+    <script>
+      function createGanttChart(tasks) {
+        const chart = document.getElementById("gantt-chart");
+        chart.innerHTML = ""; // Réinitialiser le graphique
+
+        const chartWidth = chart.clientWidth;
+        const chartStartDate = new Date("2024-07-01");
+        const chartEndDate = new Date("2024-08-30");
+        const totalDays =
+          (chartEndDate - chartStartDate) / (1000 * 60 * 60 * 24);
+
+        tasks.forEach((task) => {
+          const plannedStart = new Date(task.plannedStart);
+          const plannedEnd = new Date(task.plannedEnd);
+          const actualStart = new Date(task.actualStart);
+          const actualEnd = new Date(task.actualEnd);
+
+          // Calculer les positions et largeurs en pixels
+          const plannedOffset =
+            ((plannedStart - chartStartDate) /
+              (1000 * 60 * 60 * 24) /
+              totalDays) *
+            chartWidth;
+          const plannedWidth =
+            ((plannedEnd - plannedStart) / (1000 * 60 * 60 * 24) / totalDays) *
+            chartWidth;
+
+          const actualOffset =
+            ((actualStart - chartStartDate) /
+              (1000 * 60 * 60 * 24) /
+              totalDays) *
+            chartWidth;
+          const actualWidth =
+            ((actualEnd - actualStart) / (1000 * 60 * 60 * 24) / totalDays) *
+            chartWidth;
+
+          // Créer un conteneur pour la tâche
+          const taskDiv = document.createElement("div");
+          taskDiv.classList.add("gantt-task");
+
+          // Ajouter la barre planifiée
+          const plannedBar = document.createElement("div");
+          plannedBar.classList.add("planned-bar");
+          plannedBar.style.left = `${plannedOffset}px`;
+          plannedBar.style.width = `${plannedWidth}px`;
+          taskDiv.appendChild(plannedBar);
+
+          // Ajouter la barre réalisée
+          const actualBar = document.createElement("div");
+          actualBar.classList.add("actual-bar");
+          actualBar.style.left = `${actualOffset}px`;
+          actualBar.style.width = `${actualWidth}px`;
+          taskDiv.appendChild(actualBar);
+
+          chart.appendChild(taskDiv);
+        });
+      }
+
+      const tasks = [];
+
+      function addTask() {
+        const taskName = document.getElementById("task-name").value;
+        const plannedStart = document.getElementById("planned-start").value;
+        const plannedEnd = document.getElementById("planned-end").value;
+        const actualStart = document.getElementById("actual-start").value;
+        const actualEnd = document.getElementById("actual-end").value;
+
+        if (
+          taskName &&
+          plannedStart &&
+          plannedEnd &&
+          actualStart &&
+          actualEnd
+        ) {
+          tasks.push({
+            name: taskName,
+            plannedStart: plannedStart,
+            plannedEnd: plannedEnd,
+            actualStart: actualStart,
+            actualEnd: actualEnd,
+          });
+
+          // Mise à jour du diagramme de Gantt
+          createGanttChart(tasks);
+
+          // Réinitialiser le formulaire
+          document.getElementById("task-name").value = "";
+          document.getElementById("planned-start").value = "";
+          document.getElementById("planned-end").value = "";
+          document.getElementById("actual-start").value = "";
+          document.getElementById("actual-end").value = "";
+        } else {
+          alert("Veuillez remplir tous les champs.");
+        }
+      }
+
+      // Initialiser le diagramme vide
+      createGanttChart(tasks);
+    </script>
+  </body>
+</html>
